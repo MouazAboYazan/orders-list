@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders List App</title>
+    <!-- Add Bootstrap CSS link -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Add your custom CSS styles here -->
+    <style>
+        /* Add your custom styles here */
+        .completed-task {
+            text-decoration: line-through;
+            color: gray;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h1 class="text-center">Orders List</h1>
+                <!-- User Name Input -->
+                <div class="form-group">
+                    <label for="userName">Your Name:</label>
+                    <input type="text" class="form-control" id="userName" placeholder="Enter your name">
+                </div>
+                <!-- To-Do List Input -->
+                <div class="form-group">
+                    <label for="todoInput">Add Order:</label>
+                    <input type="text" class="form-control" id="todoInput" placeholder="Enter a task">
+                </div>
+                <!-- Add Task Button -->
+                <button class="btn btn-primary btn-block" id="addTaskBtn">Add Task</button>
+                <!-- To-Do List -->
+                <ul class="list-group mt-3" id="todoList">
+                    <!-- Tasks will be added here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Bootstrap and your custom JavaScript here -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // JavaScript code for adding tasks and local storage
+        const userNameInput = document.getElementById("userName");
+        const todoInput = document.getElementById("todoInput");
+        const addTaskBtn = document.getElementById("addTaskBtn");
+        const todoList = document.getElementById("todoList");
+
+        // Load tasks from local storage
+        const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+        // Display tasks from local storage
+        savedTasks.forEach(task => {
+            const listItem = createTaskItem(task);
+            todoList.appendChild(listItem);
+        });
+
+        function createTaskItem(task) {
+            const listItem = document.createElement("li");
+            listItem.className = "list-group-item";
+            
+            const taskElement = document.createElement("span");
+            taskElement.textContent = task.text;
+            
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "btn btn-danger btn-sm float-right";
+            deleteButton.textContent = "Delete";
+
+            // Display both created and completed dates with a line break
+            const timestamp = document.createElement("small");
+            timestamp.className = "text-muted";
+            timestamp.innerHTML = `  Created: ${task.createdDate}<br>Completed: ${task.completedDate}`;
+
+            deleteButton.addEventListener("click", function () {
+                // Remove the task from local storage
+                const taskIndex = savedTasks.findIndex(savedTask => savedTask.text === task.text);
+                if (taskIndex !== -1) {
+                    savedTasks.splice(taskIndex, 1);
+                    localStorage.setItem("tasks", JSON.stringify(savedTasks));
+                }
+
+                // Remove the task from the list
+                listItem.remove();
+            });
+
+            taskElement.addEventListener("click", function () {
+                // Toggle the completion style
+                taskElement.classList.toggle("completed-task");
+
+                // Update completion date and time
+                const completionTime = new Date().toLocaleString();
+                timestamp.innerHTML = `Created: ${task.createdDate}<br>Completed: ${completionTime}`;
+            });
+
+            listItem.appendChild(taskElement);
+            listItem.appendChild(deleteButton);
+            listItem.appendChild(timestamp);
+            return listItem;
+        }
+
+        addTaskBtn.addEventListener("click", function () {
+            const userName = userNameInput.value.trim();
+            const taskText = todoInput.value.trim();
+
+            if (userName === "" || taskText === "") {
+                alert("Please enter your name and a task.");
+                return;
+            }
+
+            const createdDate = new Date().toLocaleString();
+            const completedDate = ""; // Initially, there's no completion date and time
+            const task = { text: `${userName}: ${taskText}`, createdDate, completedDate };
+            const listItem = createTaskItem(task);
+
+            // Add the task to local storage
+            savedTasks.push(task);
+            localStorage.setItem("tasks", JSON.stringify(savedTasks));
+
+            // Add the list item to the to-do list
+            todoList.appendChild(listItem);
+
+            // Clear the task input
+            todoInput.value = "";
+        });
+    </script>
+</body>
+</html>
+    
