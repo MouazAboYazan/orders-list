@@ -33,7 +33,7 @@
                     <input type="text" class="form-control" id="todoInput" placeholder="Enter a task">
                 </div>
                 <!-- Add Task Button -->
-                <button class="btn btn-primary btn-block" id="addTaskBtn">Add Task</button>
+                <button class="btn btn-primary btn-block" id="addTaskBtn">Add Order</button>
                 <!-- To-Do List -->
                 <ul class="list-group mt-3" id="todoList">
                     <!-- Tasks will be added here -->
@@ -96,7 +96,7 @@
 
                 // Update completion date and time
                 const completionTime = new Date().toLocaleString();
-                timestamp.innerHTML = `Created: ${task.createdDate}<br>Completed: ${completionTime}`;
+                timestamp.innerHTML = `ordered: ${task.createdDate}<br>Completed: ${completionTime}`;
             });
 
             listItem.appendChild(taskElement);
