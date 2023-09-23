@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders List App</title>
+    <title>To-Do List App</title>
     <!-- Add Bootstrap CSS link -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Add your custom CSS styles here -->
@@ -14,7 +13,9 @@
             text-decoration: line-through;
             color: gray;
         }
-        
+        .mt-2{
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -24,7 +25,7 @@
                 <h1 class="text-center">Orders List</h1>
                 <!-- User Name Input -->
                 <div class="form-group">
-                    <label for="userName">Your Name:</label>
+                    <label for="userName">User Name:</label>
                     <input type="text" class="form-control" id="userName" placeholder="Enter your name">
                 </div>
                 <!-- To-Do List Input -->
@@ -33,7 +34,7 @@
                     <input type="text" class="form-control" id="todoInput" placeholder="Enter a task">
                 </div>
                 <!-- Add Task Button -->
-                <button class="btn btn-primary btn-block" id="addTaskBtn">Add Order</button>
+                <button class="btn btn-primary btn-block" id="addTaskBtn">Add Task</button>
                 <!-- To-Do List -->
                 <ul class="list-group mt-3" id="todoList">
                     <!-- Tasks will be added here -->
@@ -54,33 +55,51 @@
         const todoList = document.getElementById("todoList");
 
         // Load tasks from local storage
-        const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        let savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
         // Display tasks from local storage
-        savedTasks.forEach(task => {
-            const listItem = createTaskItem(task);
-            todoList.appendChild(listItem);
-        });
+        function displayTasks() {
+            todoList.innerHTML = ""; // Clear the existing list
+            savedTasks.forEach((task, index) => {
+                const listItem = createTaskItem(task, index);
+                todoList.appendChild(listItem);
+            });
+        }
 
-        function createTaskItem(task) {
+        function createTaskItem(task, index) {
             const listItem = document.createElement("li");
             listItem.className = "list-group-item";
-            
+
             const taskElement = document.createElement("span");
-            taskElement.textContent = task.text;
-            
+            taskElement.textContent = task.taskText;
+
+            const descriptionElement = document.createElement("p");
+            descriptionElement.textContent = task.descriptionText;
+            descriptionElement.className = "mt-2";
+            descriptionElement.style.display = task.completed ? "block" : "none";
+
             const deleteButton = document.createElement("button");
             deleteButton.className = "btn btn-danger btn-sm float-right";
             deleteButton.textContent = "Delete";
 
+            const addDescriptionButton = document.createElement("button");
+            addDescriptionButton.className = "btn btn-primary btn-sm float-right mr-2";
+            addDescriptionButton.textContent = "Add Description";
+            addDescriptionButton.style.display = task.completed ? "none" : "inline";
+
             // Display both created and completed dates with a line break
             const timestamp = document.createElement("small");
             timestamp.className = "text-muted";
-            timestamp.innerHTML = `  Created: ${task.createdDate}<br>Completed: ${task.completedDate}`;
+            timestamp.innerHTML = `Created: ${task.createdDate}<br>Completed: ${task.completedDate}`;
+
+            // Apply the completed style if the task is completed
+            if (task.completed) {
+                taskElement.classList.add("completed-task");
+            }
 
             deleteButton.addEventListener("click", function () {
                 // Remove the task from local storage
-                const taskIndex = savedTasks.findIndex(savedTask => savedTask.text === task.text);
+                const taskIndex = savedTasks.findIndex(savedTask => savedTask.taskText === task.taskText);
                 if (taskIndex !== -1) {
                     savedTasks.splice(taskIndex, 1);
                     localStorage.setItem("tasks", JSON.stringify(savedTasks));
@@ -90,18 +109,51 @@
                 listItem.remove();
             });
 
+            addDescriptionButton.addEventListener("click", function () {
+                const newDescription = prompt("Add Description:");
+                if (newDescription !== null) {
+                    task.descriptionText = newDescription;
+                    descriptionElement.textContent = newDescription;
+                    descriptionElement.style.display = "block";
+
+                    // Update the task in local storage
+                    const taskIndex = savedTasks.findIndex(savedTask => savedTask.taskText === task.taskText);
+                    if (taskIndex !== -1) {
+                        savedTasks[taskIndex] = task;
+                        localStorage.setItem("tasks", JSON.stringify(savedTasks));
+                    }
+                }
+            });
+
             taskElement.addEventListener("click", function () {
                 // Toggle the completion style
                 taskElement.classList.toggle("completed-task");
 
                 // Update completion date and time
                 const completionTime = new Date().toLocaleString();
-                timestamp.innerHTML = `ordered: ${task.createdDate}<br>Completed: ${completionTime}`;
+                timestamp.innerHTML = `Created: ${task.createdDate}<br>Completed: ${completionTime}`;
+
+                // Show/hide the description elements based on completion
+                if (taskElement.classList.contains("completed-task")) {
+                    descriptionElement.style.display = "block";
+                    addDescriptionButton.style.display = "none";
+                } else {
+                    descriptionElement.style.display = "none";
+                    addDescriptionButton.style.display = "inline";
+                }
+
+                // Update the task's completion status in local storage
+                task.completed = !task.completed;
+                task.completedDate = taskElement.classList.contains("completed-task") ? completionTime : null;
+                localStorage.setItem("tasks", JSON.stringify(savedTasks));
             });
 
             listItem.appendChild(taskElement);
+            listItem.appendChild(descriptionElement);
+            listItem.appendChild(addDescriptionButton);
             listItem.appendChild(deleteButton);
             listItem.appendChild(timestamp);
+
             return listItem;
         }
 
@@ -115,21 +167,28 @@
             }
 
             const createdDate = new Date().toLocaleString();
-            const completedDate = ""; // Initially, there's no completion date and time
-            const task = { text: `${userName}: ${taskText}`, createdDate, completedDate };
-            const listItem = createTaskItem(task);
+            const taskObject = {
+                taskText: `${userName}: ${taskText}`,
+                createdDate: createdDate,
+                completedDate: null,
+                descriptionText: "",
+                completed: false
+            };
 
-            // Add the task to local storage
-            savedTasks.push(task);
+            savedTasks.push(taskObject);
             localStorage.setItem("tasks", JSON.stringify(savedTasks));
 
-            // Add the list item to the to-do list
-            todoList.appendChild(listItem);
-
-            // Clear the task input
+            // Clear the input fields
+            userNameInput.value = "";
             todoInput.value = "";
+
+            // Create the task item and append it to the todoList
+            const listItem = createTaskItem(taskObject, savedTasks.length - 1);
+            todoList.appendChild(listItem);
         });
+
+        // Initial display of tasks
+        displayTasks();
     </script>
 </body>
 </html>
-    
